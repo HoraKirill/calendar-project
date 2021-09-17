@@ -75,10 +75,11 @@
           <v-calendar
               :weekdays="weekdays"
               :weekday-format="myDayFormat"
+              :month-format="myMonthFormat"
               :interval-format="intervalFormat"
-              :first-interval= 8
-              :interval-minutes= 60
-              :interval-count= 13
+              :first-interval=8
+              :interval-minutes=60
+              :interval-count=13
               ref="calendar"
               v-model="focus"
               color="primary"
@@ -177,7 +178,21 @@ export default {
       selectedOpen: false,
       events: [],
       weekdays: [1, 2, 3, 4, 5, 6, 0],
-      weekdaysLabels: {1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб', 0: 'Вс'}
+      weekdaysLabels: {1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб', 0: 'Вс'},
+      monthsLabels: {
+        1: 'Январь',
+        2: 'Февраль',
+        3: 'Март',
+        4: 'Апрель',
+        5: 'Май',
+        6: 'Июнь',
+        7: 'Июль',
+        8: 'Август',
+        9: 'Сентябрь',
+        10: 'Октябрь',
+        11: 'Ноябрь',
+        12: 'Декабрь',
+      }
     }
   },
 
@@ -192,6 +207,9 @@ export default {
   methods: {
     myDayFormat(d) {
       return this.weekdaysLabels[d.weekday]
+    },
+    myMonthFormat(m) {
+      return this.monthsLabels[m.month]
     },
     intervalFormat(locale) {
       return locale.time;
