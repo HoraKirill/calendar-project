@@ -126,7 +126,6 @@ export default {
     links() {
       if (this.isUserLoggedIn) {
         return [
-          {title: 'Календарь', icon: 'mdi-calendar', url: '/calendar'},
           {title: 'Создать событие', icon: 'mdi-calendar-plus', url: '/events'}
         ]
       }

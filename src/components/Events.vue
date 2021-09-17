@@ -120,28 +120,198 @@
                     v-model="pickerColors"
                 ></v-color-picker>
               </v-menu>
+              <v-row>
+                <v-col>
               <v-text-field
-                  prepend-icon="mdi-account-circle-outline"
+                  prepend-icon="mdi-numeric"
                   label="Исполнитель"
                   :rules="rules"
                   v-model="name"
               ></v-text-field>
-              <v-text-field
+                </v-col>
+                <v-col>
+              <v-dialog
+                  v-model="dialog"
+                  scrollable
+                  max-width="300px"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                      color="primary"
+                      dark
+                      v-bind="attrs"
+                      v-on="on"
+                  >
+                    Выбрать исполнителя
+                  </v-btn>
+                </template>
+                <v-card>
+                  <v-card-title>Иполнители</v-card-title>
+                  <v-divider></v-divider>
+                  <v-card-text style="height: 300px;">
+                    <v-radio-group
+                        v-model="name"
+                        column
+                    >
+                      <v-radio
+                          v-for="(value, name) in usersExecutor" :key="name"
+                          :label="name"
+                          :value="name"
+                      >hee</v-radio>
+                    </v-radio-group>
+                  </v-card-text>
+                  <v-divider></v-divider>
+                  <v-card-actions>
+                    <v-btn
+                        color="blue darken-1"
+                        text
+                        @click="dialog = false, name = ''"
+                    >
+                      Назад
+                    </v-btn>
+                    <v-btn
+                        color="blue darken-1"
+                        text
+                        @click="dialog = false"
+                    >
+                      Сохранить
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                 <v-text-field
                   prepend-icon="mdi-numeric"
                   label="Номер кабинета"
                   :rules="rules"
                   v-model="office"
-              ></v-text-field>
-              <v-textarea
-                  v-model="listParticipants"
-                  color="teal"
-              >
-                <template v-slot:label>
-                  <div>
-                    Список участников
-                  </div>
-                </template>
-              </v-textarea>
+                  ></v-text-field>
+                </v-col>
+                  <v-col>
+                    <v-dialog
+                        v-model="dialog1"
+                        scrollable
+                        max-width="300px"
+                    >
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-btn
+                            color="primary"
+                            dark
+                            v-bind="attrs"
+                            v-on="on"
+                        >
+                          Выбрать кабинет
+                        </v-btn>
+                      </template>
+                      <v-card>
+                        <v-card-title>Кабинет</v-card-title>
+                        <v-divider></v-divider>
+                        <v-card-text style="height: 300px;">
+                          <v-radio-group
+                              v-model="office"
+                              column
+                          >
+                            <v-radio
+                                v-for="(value, name) in officeDb" :key="name"
+                                :label="name"
+                                :value="name"
+                            ></v-radio>
+                          </v-radio-group>
+                        </v-card-text>
+                        <v-divider></v-divider>
+                        <v-card-actions>
+                          <v-btn
+                              color="blue darken-1"
+                              text
+                              @click="dialog1 = false, office = ''"
+                          >
+                            Назад
+                          </v-btn>
+                          <v-btn
+                              color="blue darken-1"
+                              text
+                              @click="dialog1 = false"
+                          >
+                            Сохранить
+                          </v-btn>
+                        </v-card-actions>
+                      </v-card>
+                    </v-dialog>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                <v-textarea
+                    v-model="listParticipants"
+                    color="teal"
+                    disabled
+                >
+                  <template v-slot:label>
+                    <div>
+                      Список участников
+                    </div>
+                  </template>
+                </v-textarea>
+                </v-col>
+                <v-col>
+                  <v-dialog
+                      v-model="dialog2"
+                      scrollable
+                      max-width="300px"
+                  >
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                          color="primary"
+                          dark
+                          v-bind="attrs"
+                          v-on="on"
+                      >
+                        Список участников
+                      </v-btn>
+                    </template>
+                    <v-card>
+
+                      <v-card-title>Участники</v-card-title>
+                          <v-btn
+                              color="primary"
+                              dark
+
+                          >
+                            Добавить
+                          </v-btn>
+
+                      <v-divider></v-divider>
+                      <v-card-text style="height: 300px;">
+                        <v-checkbox
+                            v-model="listParticipants"
+                            label="John"
+                            value="John"
+                        ></v-checkbox>
+                      </v-card-text>
+                      <v-divider></v-divider>
+                      <v-card-actions>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="dialog2 = false"
+                        >
+                          Назад
+                        </v-btn>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="dialog2 = false"
+                        >
+                          Сохранить
+                        </v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </v-dialog>
+                </v-col>
+              </v-row>
             </v-form>
           </v-card-text>
           <v-card-actions>
@@ -159,6 +329,7 @@
 </template>
 
 <script>
+import { getDatabase, ref, child, get } from "firebase/database";
 
 export default {
   data () {
@@ -178,7 +349,31 @@ export default {
       rules: [
         value => !!value || 'Заполните',
       ],
+      dialog2: false,
+      dialog1: false,
+      dialog: false,
+      usersExecutor: {},
+      officeDb: {}
     }
+  },
+
+  mounted() {
+    const dbRef = ref(getDatabase());
+    get(child(dbRef, `users/`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        this.usersExecutor = snapshot.val();
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+    get(child(dbRef, `office/`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        this.officeDb = snapshot.val();
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+
   },
 
   methods: {
@@ -190,7 +385,7 @@ export default {
       const end = new Date(`${this.pickerDate}T${this.timeEnd}`)
 
         const events =  {
-          name: `${this.name}  ${this.office}`,
+          name: this.name,
           office: this.office,
           start: start,
           end: end,
@@ -199,9 +394,9 @@ export default {
           timed: true
         }
 
-      this.$store.dispatch('getEvent', events)
+      this.$store.dispatch('newEvent', events)
           .then(() => {
-            this.$router.push('/calendar')
+            this.$router.push('/')
           })
           .catch(() => {})
        }

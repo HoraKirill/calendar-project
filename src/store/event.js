@@ -1,4 +1,4 @@
-import { getDatabase, ref, set, push, onValue, update } from "firebase/database"
+import { getDatabase, ref, set, push, onValue, update, child, get } from "firebase/database"
 
 class Event {
     constructor(name, start, end, color, office = true, listParticipants, id =null, timed, ownerId) {
@@ -42,7 +42,7 @@ export default {
         }
     },
     actions:{
-        async getEvent({commit, getters}, payload) {
+        async newEvent({commit, getters}, payload) {
             commit('clearError')
             commit('setLoading', true)
             try {
@@ -58,6 +58,21 @@ export default {
                     listParticipants: payload.listParticipants,
                     timed: payload.timed,
                     ownerId: getters.user.id
+                });
+                const dbRef = ref(getDatabase());
+                await get(child(dbRef, `users/${payload.name}`)).then(() => {
+                        set(ref(db, 'users/' + payload.name + `/${newEventsRef.key}`), {
+                            ownerId: getters.user.id
+                        });
+                }).catch((error) => {
+                    console.error(error);
+                });
+                await get(child(dbRef, `office/`)).then(() => {
+                    set(ref(db, 'office/' + payload.office), {
+                        ownerId: getters.user.id
+                    });
+                }).catch((error) => {
+                    console.error(error);
                 });
                 const newEvent = new Event(payload.name, payload.start, payload.end, payload.color, payload.office, payload.listParticipants, newEventsRef.key, getters.user.id)
                 commit('setEvent', newEvent)
