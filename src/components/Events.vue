@@ -86,6 +86,7 @@
                   ></v-text-field>
                 </template>
                   <v-date-picker
+                      :weekdays="weekdays"
                       v-if="menuCalendar"
                       full-width
                       @click:date="$refs.menuCalendar.save(pickerDate)"
@@ -126,7 +127,7 @@
                   prepend-icon="mdi-numeric"
                   label="Исполнитель"
                   :rules="rules"
-                  v-model="name"
+                  v-model="name.name"
               ></v-text-field>
                 </v-col>
                 <v-col>
@@ -146,7 +147,7 @@
                   </v-btn>
                 </template>
                 <v-card>
-                  <v-card-title>Иполнители</v-card-title>
+                  <v-card-title>Иcполнители</v-card-title>
                   <v-divider></v-divider>
                   <v-card-text style="height: 300px;">
                     <v-radio-group
@@ -154,10 +155,10 @@
                         column
                     >
                       <v-radio
-                          v-for="(value, name) in usersExecutor" :key="name"
-                          :label="name"
-                          :value="name"
-                      >hee</v-radio>
+                          v-for="user in usersExecutor" :key="user.name"
+                          :label="user.name"
+                          :value="user"
+                      ></v-radio>
                     </v-radio-group>
                   </v-card-text>
                   <v-divider></v-divider>
@@ -187,7 +188,7 @@
                   prepend-icon="mdi-numeric"
                   label="Номер кабинета"
                   :rules="rules"
-                  v-model="office"
+                  v-model="office.name"
                   ></v-text-field>
                 </v-col>
                   <v-col>
@@ -215,9 +216,9 @@
                               column
                           >
                             <v-radio
-                                v-for="(value, name) in officeDb" :key="name"
-                                :label="name"
-                                :value="name"
+                                v-for="office in officeList" :key="office.name"
+                                :label="office.name"
+                                :value="office"
                             ></v-radio>
                           </v-radio-group>
                         </v-card-text>
@@ -244,68 +245,51 @@
               </v-row>
               <v-row>
                 <v-col>
-                <v-textarea
-                    v-model="listParticipants"
-                    color="teal"
-                    disabled
-                >
-                  <template v-slot:label>
-                    <div>
-                      Список участников
-                    </div>
-                  </template>
-                </v-textarea>
+                  <v-select
+                      v-model="participantsSelect"
+                      :items="participantsList"
+                      item-text="name"
+                      :menu-props="{ maxHeight: '400' }"
+                      label="Участники"
+                      multiple
+                      hint="Выберете участников"
+                      persistent-hint
+                      return-object
+                  ></v-select>
                 </v-col>
                 <v-col>
-                  <v-dialog
-                      v-model="dialog2"
-                      scrollable
-                      max-width="300px"
-                  >
-                    <template v-slot:activator="{ on, attrs }">
                       <v-btn
                           color="primary"
                           dark
-                          v-bind="attrs"
-                          v-on="on"
+                          @click="dialog3 =true"
                       >
-                        Список участников
+                        Добавить участника
                       </v-btn>
-                    </template>
+                  <v-dialog
+                      v-model="dialog3"
+                      max-width="500px"
+                  >
                     <v-card>
-
-                      <v-card-title>Участники</v-card-title>
-                          <v-btn
-                              color="primary"
-                              dark
-
-                          >
-                            Добавить
-                          </v-btn>
-
-                      <v-divider></v-divider>
-                      <v-card-text style="height: 300px;">
-                        <v-checkbox
-                            v-model="listParticipants"
-                            label="John"
-                            value="John"
-                        ></v-checkbox>
-                      </v-card-text>
-                      <v-divider></v-divider>
+                      <v-card-title>
+                        <v-text-field
+                            label="Участник"
+                            v-model="participants.name"
+                        ></v-text-field>
+                      </v-card-title>
                       <v-card-actions>
                         <v-btn
-                            color="blue darken-1"
+                            color="primary"
                             text
-                            @click="dialog2 = false"
+                            @click="dialog3 = false"
                         >
-                          Назад
+                          назад
                         </v-btn>
                         <v-btn
-                            color="blue darken-1"
+                            color="primary"
                             text
-                            @click="dialog2 = false"
+                            @click="newParticipants"
                         >
-                          Сохранить
+                          Добавить
                         </v-btn>
                       </v-card-actions>
                     </v-card>
@@ -329,11 +313,12 @@
 </template>
 
 <script>
-import { getDatabase, ref, child, get } from "firebase/database";
+import {getDatabase, ref, child, get} from "firebase/database";
 
 export default {
   data () {
     return {
+      weekdays: [1, 2, 3, 4, 5, 6, 0],
       pickerDate: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
       menuCalendar: false,
       pickerColors: '',
@@ -342,18 +327,21 @@ export default {
       menuStart: false,
       timeEnd: null,
       menuEnd: false,
-      name: '',
-      office: '',
-      listParticipants: '',
+      name: {},
+      office: {},
+      officeList:[],
+      participantsList: [],
+      participants: {},
+      participantsSelect: [],
       valid: false,
       rules: [
         value => !!value || 'Заполните',
       ],
       dialog2: false,
+      dialog3: false,
       dialog1: false,
       dialog: false,
-      usersExecutor: {},
-      officeDb: {}
+      usersExecutor: [],
     }
   },
 
@@ -361,23 +349,41 @@ export default {
     const dbRef = ref(getDatabase());
     get(child(dbRef, `users/`)).then((snapshot) => {
       if (snapshot.exists()) {
-        this.usersExecutor = snapshot.val();
+        snapshot.forEach((childSnapshot) => {
+          const childData = childSnapshot.val();
+          childData.id = childSnapshot.key
+          this.usersExecutor.push(childData);
+        });
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+    get(child(dbRef, `participants/`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+          console.log(childSnapshot.val())
+          const childData = childSnapshot.val();
+          childData.id = childSnapshot.key
+          this.participantsList.push(childData);
+        });
       }
     }).catch((error) => {
       console.error(error);
     });
     get(child(dbRef, `office/`)).then((snapshot) => {
       if (snapshot.exists()) {
-        this.officeDb = snapshot.val();
+        snapshot.forEach((childSnapshot) => {
+          const childData = childSnapshot.val();
+          childData.id = childSnapshot.key
+          this.officeList.push(childData);
+        });
       }
     }).catch((error) => {
       console.error(error);
     });
-
   },
 
   methods: {
-
     eventWrite () {
       if (this.$refs.form.validate()) {
 
@@ -390,7 +396,7 @@ export default {
           start: start,
           end: end,
           color: this.pickerColors,
-          listParticipants: this.listParticipants,
+          participantsList: this.participantsSelect,
           timed: true
         }
 
@@ -400,6 +406,11 @@ export default {
           })
           .catch(() => {})
        }
+    },
+    newParticipants () {
+      this.participantsList.push({...this.participants})
+      this.participants.name = ''
+      this.dialog3 = false
     }
   }
 }

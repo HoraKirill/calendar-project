@@ -140,7 +140,7 @@
                 <span v-html="'Кабинет ' + selectedEvent.office"></span>
               </v-card-text>
               <v-card-text>
-                <span v-html="selectedEvent.listParticipants"></span>
+                <span v-for="participants in selectedEvent.listParticipants" :key="participants.name">{{ participants }}</span>
               </v-card-text>
               <v-card-actions>
                 <v-btn
