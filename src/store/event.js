@@ -87,12 +87,9 @@ export default {
                         })
                     } else {
                     snapshot.forEach((childSnapshot) => {
-                        console.log('childSnapshot ' + childSnapshot.val())
                         const childData = childSnapshot.val();
                         childData.id = childSnapshot.key
                         payload.participantsList.forEach((el) => {
-                            console.log(el.id)
-                            console.log(childData.id)
                             if (el.id !== childData.id) {
                                 set(push(ref(db, 'participants')), {
                                     name:  el.name,
@@ -174,7 +171,7 @@ export default {
                 await update(ref(db), updates)
                 await get(child(dbRef, `users/` + payload.id)).then((snapshot) => {
                     if (snapshot.exists()) {
-                        console.log(snapshot.val())
+                        console.log('')
                     } else {
                         set(newUsersRef, {
                             name:  payload.name,

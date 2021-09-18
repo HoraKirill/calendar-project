@@ -361,7 +361,6 @@ export default {
     get(child(dbRef, `participants/`)).then((snapshot) => {
       if (snapshot.exists()) {
         snapshot.forEach((childSnapshot) => {
-          console.log(childSnapshot.val())
           const childData = childSnapshot.val();
           childData.id = childSnapshot.key
           this.participantsList.push(childData);
