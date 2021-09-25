@@ -76,7 +76,7 @@ export default {
 
         this.$store.dispatch('loginUser', user)
             .then(() => {
-              this.$router.push('/calendar')
+              this.$router.push('/')
             })
             .catch(() => {})
       }

@@ -23,12 +23,15 @@
               <v-list-item-title v-text="link.title"></v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <eventModal
+              :create-mode="true"
+          ></eventModal>
           <v-list-item
               v-if="isUserLoggedIn"
               @click="onLogout"
           >
             <v-list-item-icon>
-              <v-icon >mdi-exit-to-app</v-icon>
+              <v-icon>mdi-exit-to-app</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Выйти</v-list-item-title>
@@ -44,8 +47,8 @@
         color="primary"
     >
       <v-app-bar-nav-icon
-        @click="drawer = !drawer"
-        class="hidden-md-and-up"
+          @click="drawer = !drawer"
+          class="hidden-md-and-up"
       ></v-app-bar-nav-icon>
       <v-toolbar-title>
         <router-link to="/" custom v-slot="{ navigate }" class="pointer">
@@ -59,14 +62,14 @@
       <v-spacer></v-spacer>
 
       <v-toolbar-items class="hidden-sm-and-down">
-      <v-btn
-          text
-          v-for="(link, i) in links" :key="i"
-          :to="link.url"
-      >
-        <v-icon left>{{ link.icon }}</v-icon>
-        {{ link.title }}
-      </v-btn>
+        <v-btn
+            text
+            v-for="(link, i) in links" :key="i"
+            :to="link.url"
+        >
+          <v-icon left>{{ link.icon }}</v-icon>
+          {{ link.title }}
+        </v-btn>
         <v-btn
             text
             @click="onLogout"
@@ -80,41 +83,43 @@
 
     <v-main>
 
-        <router-view></router-view>
+      <router-view></router-view>
 
     </v-main>
 
     <template v-if="error">
       <v-snackbar
-        color="error"
-        @input="closeError"
-        :timeout="3000"
-        :value="true"
-    >
-      {{ error }}
+          color="error"
+          @input="closeError"
+          :timeout="3000"
+          :value="true"
+      >
+        {{ error }}
 
-      <template v-slot:action="{ attrs }">
-        <v-btn
-            color="dark"
-            text
-            v-bind="attrs"
-            @click="closeError"
-        >
-          Close
-        </v-btn>
-      </template>
+        <template v-slot:action="{ attrs }">
+          <v-btn
+              color="dark"
+              text
+              v-bind="attrs"
+              @click="closeError"
+          >
+            Close
+          </v-btn>
+        </template>
       </v-snackbar>
     </template>
   </v-app>
 </template>
 
 <script>
+import EventModal from "./components/EventModal";
+
 export default {
-  data () {
-      return {
-        drawer: false,
-        selectedItem: 1,
-      }
+  data() {
+    return {
+      drawer: false,
+      selectedItem: 1,
+    }
   },
   computed: {
     error() {
@@ -126,8 +131,7 @@ export default {
     links() {
       if (this.isUserLoggedIn) {
         return [
-          {title: 'Календарь', icon: 'mdi-calendar', url: '/calendar'},
-          {title: 'Создать событие', icon: 'mdi-calendar-plus', url: '/events'}
+          {title: 'Настройки', icon: 'mdi-folder-information-outline', url: '/settings'}
         ]
       }
       return [
@@ -136,8 +140,11 @@ export default {
       ]
     }
   },
+  components: {
+    eventModal: EventModal
+  },
   methods: {
-    closeError () {
+    closeError() {
       this.$store.dispatch('clearError')
     },
     onLogout() {
