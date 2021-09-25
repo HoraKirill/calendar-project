@@ -5,6 +5,7 @@ import Login from '@/components/Login'
 import Calendar from '@/components/Calendar'
 import Registration from '@/components/Registration'
 import Events from '@/components/Events'
+import Settings from '@/components/Settings'
 
 
 Vue.use(VueRouter)
@@ -22,16 +23,23 @@ const routes = [
     component: Login
   },
   {
+    path: '/registration',
+    name: 'registration',
+    component: Registration
+  },
+  {
     path: '/events',
     name: 'events',
     component: Events,
     beforeEnter: AuthGuard
   },
   {
-    path: '/registration',
-    name: 'registration',
-    component: Registration
+    path: '/settings',
+    name: 'settings',
+    component: Settings,
+    beforeEnter: AuthGuard
   },
+
 
 ]
 

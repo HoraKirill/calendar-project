@@ -40,6 +40,37 @@
               {{ $refs.calendar.title }}
             </v-toolbar-title>
             <v-spacer></v-spacer>
+            <v-container >
+            <v-row>
+              <v-col
+                  align="center">
+                <v-select
+                    v-model="usersFilter"
+                    class="pr-2"
+                    :items="usersList"
+                    item-text="name"
+                    :menu-props="{ maxHeight: '400' }"
+                    label="Преподователи"
+                    multiple
+                    prepend-icon="mdi-file-find-outline"
+                    :full-width="true"
+                ></v-select>
+              </v-col>
+              <v-col>
+                <v-select
+                    v-model="participantsFilter"
+                    class="pr-5"
+                    :items="participantsList"
+                    item-text="name"
+                    :menu-props="{ maxHeight: '400' }"
+                    label="Ученики"
+                    multiple
+                    append-icon="mdi-file-find-outline"
+                    :full-width="true"
+                ></v-select>
+              </v-col>
+            </v-row>
+            </v-container>
             <v-menu
                 bottom
                 right
@@ -51,20 +82,22 @@
                     v-bind="attrs"
                     v-on="on"
                 >
+
                   <span>{{ typeToLabel[type] }}</span>
                   <v-icon right>
                     mdi-menu-down
                   </v-icon>
                 </v-btn>
               </template>
+
               <v-list>
-                <v-list-item @click="type = 'day'">
+                <v-list-item @click="changeType(categoryType.day)">
                   <v-list-item-title>День</v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="type = 'week'">
+                <v-list-item @click="changeType(categoryType.week)">
                   <v-list-item-title>Неделя</v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="type = 'month'">
+                <v-list-item @click="changeType(categoryType.month)">
                   <v-list-item-title>Месяц</v-list-item-title>
                 </v-list-item>
               </v-list>
@@ -73,6 +106,8 @@
         </v-sheet>
         <v-sheet height="600">
           <v-calendar
+              category-show-all
+              :categories="categories"
               :weekdays="weekdays"
               :weekday-format="myDayFormat"
               :month-format="myMonthFormat"
@@ -86,11 +121,28 @@
               :events="events"
               :event-color="getEventColor"
               :type="type"
+              :category-days="categoryDays"
               @click:event="showEvent"
               @click:more="viewDay"
               @click:date="viewDay"
-              @change="updateRange"
-          ></v-calendar>
+              @mousedown:event="startDrag"
+              @mousedown:time-category="startTime"
+              @mousemove:time-category="mouseMove"
+              @mouseup:time-category="endDrag"
+              @mouseleave.native="cancelDrag"
+          >
+            <template v-slot:event="{ event, timed, eventSummary }">
+              <div
+                  class="v-event-draggable"
+                  v-html="eventSummary()"
+              ></div>
+              <div
+                  v-if="timed"
+                  class="v-event-drag-bottom"
+                  @mousedown.stop="extendBottom(event)"
+              ></div>
+            </template>
+          </v-calendar>
           <v-menu
               v-model="selectedOpen"
               :close-on-content-click="false"
@@ -101,46 +153,34 @@
                 color="grey lighten-4"
                 min-width="350px"
                 flat
+
             >
               <v-toolbar
                   :color="selectedEvent.color"
                   dark
+
               >
-                <editModal :selectedEvent="selectedEvent"></editModal>
+                <v-btn
+                    class="ma-2"
+                    icon
+                    @click="openModal"
+                >
+                  <v-icon>mdi-pencil</v-icon>
+                </v-btn>
                 <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-menu
-                    bottom
-                    offset-y
-                >
-                  <template v-slot:activator="{ on, attrs }">
+
                     <v-btn
                         class="ma-2"
-                        v-bind="attrs"
-                        v-on="on"
                         icon
+                        @click="deleteEvent"
                     >
-                      <v-icon>mdi-dots-vertical</v-icon>
+                      <v-icon>mdi-delete-outline</v-icon>
                     </v-btn>
-                  </template>
-                  <v-list>
-                    <v-list-item>
-                      <v-btn
-                          text
-                          small
-                          color="secondary"
-                          @click="deleteEvent"
-                      >Удалить
-                      </v-btn>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
+
               </v-toolbar>
               <v-card-text>
-                <span v-html="'Кабинет ' + selectedEvent.office"></span>
-              </v-card-text>
-              <v-card-text>
-                <span v-for="user in selectedEvent.participantsList" :key="user.name">{{ user.name + ' '}}</span>
+                <span v-for="user in selectedEvent.participantsSelect" :key="user.name">{{ user.name + ' ' }}</span>
               </v-card-text>
               <v-card-actions>
                 <v-btn
@@ -153,6 +193,9 @@
               </v-card-actions>
             </v-card>
           </v-menu>
+          <eventModal
+              :selectedEvent="selectedEvent"
+          ></eventModal>
         </v-sheet>
       </v-col>
     </v-row>
@@ -161,22 +204,30 @@
 </template>
 
 <script>
-import EditModal from "./EditModal";
+import EventModal from "./EventModal";
 
 export default {
   data() {
     return {
+      categoryDays: 7,
+      categories: ['Белый', 'Черный'],
       focus: '',
-      type: 'month',
+      type: 'category',
       typeToLabel: {
         month: 'Месяц',
         week: 'Неделя',
         day: 'День',
+        category: 'Неделя'
+      },
+      categoryType: {
+        month: 'month',
+        week: 'week',
+        day: 'day',
+        category: 'category'
       },
       selectedEvent: {},
       selectedElement: null,
       selectedOpen: false,
-      events: [],
       weekdays: [1, 2, 3, 4, 5, 6, 0],
       weekdaysLabels: {1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб', 0: 'Вс'},
       monthsLabels: {
@@ -192,12 +243,23 @@ export default {
         10: 'Октябрь',
         11: 'Ноябрь',
         12: 'Декабрь',
-      }
+      },
+      dragEvent: null,
+      dragStart: null,
+      createEvent: null,
+      createStart: null,
+      extendOriginal: null,
+      color: '#1565C0',
+      backupStartTime: null,
+      participantsList: this.$store.getters.participants,
+      usersList: this.$store.getters.users,
+      usersFilter: [],
+      participantsFilter: []
     }
   },
 
   components: {
-    editModal: EditModal
+    eventModal: EventModal
   },
 
   mounted() {
@@ -205,6 +267,129 @@ export default {
   },
 
   methods: {
+    startDrag({event, timed}) {
+      if (event && timed) {
+        this.dragEvent = event
+        this.dragTime = null
+        this.extendOriginal = null
+      }
+    },
+   async startTime(tms) {
+      const mouse = this.toTime(tms)
+
+      if (this.dragEvent && this.dragTime === null) {
+        const start = this.dragEvent.start
+        this.backupStartTime = this.dragEvent.start
+        this.dragTime = mouse - start
+      } else {
+        this.createStart = this.roundTime(mouse)
+        this.createEvent = {
+          user: {
+            name: `mar`,
+          },
+          color: this.color,
+          start: new Date(this.createStart),
+          end: new Date(this.createStart + 60 * 60 * 1000),
+          timed: true,
+          category: tms.category,
+          participantsSelect: []
+        }
+        this.selectedEvent = this.createEvent
+        await this.$store.dispatch('resetEventModal', true)
+      }
+    },
+    extendBottom(event) {
+      this.createEvent = event
+      this.createStart = event.start
+      this.extendOriginal = event.end
+    },
+    mouseMove(tms) {
+      const mouse = this.toTime(tms)
+
+      if (this.dragEvent && this.dragTime !== null) {
+        const start = this.dragEvent.start
+        const end = this.dragEvent.end
+        const duration = end - start
+        const newStartTime = mouse - this.dragTime
+        const newStart = this.roundTime(newStartTime)
+        const newEnd = newStart + duration
+
+        this.dragEvent.start = newStart
+        this.dragEvent.end = newEnd
+        this.dragEvent.category = tms.category
+      } else if (this.createEvent && this.createStart !== null) {
+        const mouseRounded = this.roundTime(mouse, false)
+
+        const min = Math.min(mouseRounded, this.createStart)
+        const max = Math.max(mouseRounded, this.createStart)
+
+        this.createEvent.start = min
+        this.createEvent.end = max
+      }
+    },
+    endDrag() {
+      if (this.dragEvent && this.dragTime !== null && this.dragEvent.start !== this.backupStartTime) {
+        this.dragEvent.start = new Date(this.dragEvent.start)
+        this.dragEvent.end = new Date(this.dragEvent.end)
+        this.$store.dispatch('updateEvent', this.dragEvent)
+      }
+      if (this.extendOriginal && this.createEvent) {
+        this.createEvent.start = new Date(this.createEvent.start)
+        this.createEvent.end = new Date(this.createEvent.end)
+        this.$store.dispatch('updateEvent', this.createEvent)
+      }
+      this.dragTime = null
+      this.dragEvent = null
+      this.createEvent = null
+      this.createStart = null
+      this.extendOriginal = null
+      this.backupStartTime = null
+    },
+    cancelDrag() {
+      if (this.createEvent) {
+        if (this.extendOriginal) {
+          this.createEvent.end = this.extendOriginal
+        } else {
+          const i = this.events.indexOf(this.createEvent)
+          if (i !== -1) {
+            this.events.splice(i, 1)
+          }
+        }
+      }
+
+      this.createEvent = null
+      this.createStart = null
+      this.dragTime = null
+      this.dragEvent = null
+    },
+    roundTime(time, down = true) {
+      const roundTo = 15 // minutes
+      const roundDownTime = roundTo * 60 * 1000
+
+      return down
+          ? time - time % roundDownTime
+          : time + (roundDownTime - (time % roundDownTime))
+    },
+    toTime(tms) {
+      return new Date(tms.year, tms.month - 1, tms.day, tms.hour, tms.minute).getTime()
+    },
+    changeType(type) {
+      switch (type) {
+        case this.categoryType.day:
+          this.type = this.categoryType.category
+          this.categoryDays = 1
+          this.typeToLabel.category = 'День'
+          break
+        case this.categoryType.week:
+          this.type = this.categoryType.category
+          this.categoryDays = 7
+          this.typeToLabel.category = 'Неделя'
+          break
+        case this.categoryType.month:
+          this.type = this.categoryType.month
+          break
+      }
+    },
     myDayFormat(d) {
       return this.weekdaysLabels[d.weekday]
     },
@@ -216,7 +401,9 @@ export default {
     },
     viewDay({date}) {
       this.focus = date
-      this.type = 'day'
+      this.type = this.categoryType.category
+      this.categoryDays = 1
+      this.typeToLabel.category = 'День'
     },
     getEventColor(event) {
       return event.color
@@ -231,8 +418,8 @@ export default {
       this.$refs.calendar.next()
     },
     showEvent({nativeEvent, event}) {
+      this.selectedEvent = event
       const open = () => {
-        this.selectedEvent = event
         this.selectedElement = nativeEvent.target
         requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
       }
@@ -246,21 +433,73 @@ export default {
 
       nativeEvent.stopPropagation()
     },
-    updateRange() {
-      this.events = this.$store.getters.event
-    },
     deleteEvent() {
       this.$store.dispatch('deleteEvent', this.selectedEvent.id)
+      this.selectedOpen = false
+    },
+    openModal() {
+      this.$store.dispatch('resetEventModal', true)
     },
   },
   computed: {
     loading() {
       return this.$store.getters.loading
-    }
+    },
+    events() {
+      let events = this.$store.getters.eventList
+      if (this.usersFilter.length !== 0) {
+      events = events
+          .filter(user => this.usersFilter.includes(user.name))
+
+      }
+      if (this.participantsFilter.length !== 0) {
+        events = events
+            .filter(event => event.participantsSelect.find(participant =>this.participantsFilter.includes(participant.name)))
+      }
+      return events
+    },
   }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 
+.v-event-draggable {
+  padding-left: 6px;
+}
+
+.v-event-timed {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.v-event-drag-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 4px;
+  cursor: ns-resize;
+
+  &::after {
+    display: none;
+    position: absolute;
+    left: 50%;
+    height: 4px;
+    border-top: 1px solid white;
+    border-bottom: 1px solid white;
+    width: 16px;
+    margin-left: -8px;
+    opacity: 0.8;
+    content: '';
+  }
+
+  &:hover::after {
+    display: block;
+  }
+
+  .scroll {
+    overflow: no-display;
+  }
+}
 </style>

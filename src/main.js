@@ -37,6 +37,8 @@ new Vue({
       }
     });
     this.$store.dispatch('fetchEvents')
+    this.$store.dispatch('fetchUsers')
+    this.$store.dispatch('fetchParticipants')
   },
   render: h => h(App)
 }).$mount('#app')
