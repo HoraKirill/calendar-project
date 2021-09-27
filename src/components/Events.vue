@@ -123,7 +123,7 @@
         <v-row>
           <v-col>
             <v-select
-                v-model="event.user.name"
+                v-model="event.user"
                 :items="usersExecutor"
                 :menu-props="{ maxHeight: '400' }"
                 label="Учитель"
@@ -351,7 +351,7 @@ export default {
       this.dialog3 = false
     },
      newUserName() {
-      this.$store.dispatch('newUsers', this.event.user)
+      this.$store.dispatch('newUser', this.event.user)
       this.dialog1 = false
     },
     closedModal() {

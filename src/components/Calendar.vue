@@ -3,12 +3,12 @@
     <v-row class="fill-height">
       <v-col>
         <v-sheet height="64">
+
           <v-toolbar
               flat
           >
             <v-btn
                 outlined
-                class="mr-4"
                 color="grey darken-2"
                 @click="setToday"
             >
@@ -40,68 +40,66 @@
               {{ $refs.calendar.title }}
             </v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-container >
-            <v-row>
-              <v-col
-                  align="center">
-                <v-select
-                    v-model="usersFilter"
-                    class="pr-2"
-                    :items="usersList"
-                    item-text="name"
-                    :menu-props="{ maxHeight: '400' }"
-                    label="Преподователи"
-                    multiple
-                    prepend-icon="mdi-file-find-outline"
-                    :full-width="true"
-                ></v-select>
-              </v-col>
-              <v-col>
-                <v-select
-                    v-model="participantsFilter"
-                    class="pr-5"
-                    :items="participantsList"
-                    item-text="name"
-                    :menu-props="{ maxHeight: '400' }"
-                    label="Ученики"
-                    multiple
-                    append-icon="mdi-file-find-outline"
-                    :full-width="true"
-                ></v-select>
-              </v-col>
-            </v-row>
-            </v-container>
-            <v-menu
-                bottom
-                right
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                    outlined
-                    color="grey darken-2"
-                    v-bind="attrs"
-                    v-on="on"
-                >
+            <v-col>
+              <v-select
+                  v-model="usersFilter"
+                  class="pr-2"
+                  :items="usersList"
+                  item-text="name"
+                  :menu-props="{ maxHeight: '400' }"
+                  label="Преподователи"
+                  multiple
+                  prepend-icon="mdi-file-find-outline"
+                  :full-width="true"
+                  chips
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                  v-model="participantsFilter"
+                  class="pr-5 "
+                  :items="participantsList"
+                  item-text="name"
+                  :menu-props="{ maxHeight: '400' }"
+                  label="Ученики"
+                  multiple
+                  append-icon="mdi-file-find-outline"
+                  :full-width="true"
+                  chips
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-menu
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                      outlined
+                      color="grey darken-2"
+                      v-bind="attrs"
+                      v-on="on"
+                  >
 
-                  <span>{{ typeToLabel[type] }}</span>
-                  <v-icon right>
-                    mdi-menu-down
-                  </v-icon>
-                </v-btn>
-              </template>
+                    <span>{{ typeToLabel[type] }}</span>
+                    <v-icon right>
+                      mdi-menu-down
+                    </v-icon>
+                  </v-btn>
+                </template>
 
-              <v-list>
-                <v-list-item @click="changeType(categoryType.day)">
-                  <v-list-item-title>День</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="changeType(categoryType.week)">
-                  <v-list-item-title>Неделя</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="changeType(categoryType.month)">
-                  <v-list-item-title>Месяц</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
+                <v-list>
+                  <v-list-item @click="changeType(categoryType.day)">
+                    <v-list-item-title>День</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item
+                      @click="changeType(categoryType.week)">
+                    <v-list-item-title>Неделя</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="changeType(categoryType.month)">
+                    <v-list-item-title>Месяц</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </v-col>
           </v-toolbar>
         </v-sheet>
         <v-sheet height="600">
@@ -170,13 +168,13 @@
                 <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
                 <v-spacer></v-spacer>
 
-                    <v-btn
-                        class="ma-2"
-                        icon
-                        @click="deleteEvent"
-                    >
-                      <v-icon>mdi-delete-outline</v-icon>
-                    </v-btn>
+                <v-btn
+                    class="ma-2"
+                    icon
+                    @click="deleteEvent"
+                >
+                  <v-icon>mdi-delete-outline</v-icon>
+                </v-btn>
 
               </v-toolbar>
               <v-card-text>
@@ -462,7 +460,16 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style  lang="scss">
+
+.v-calendar .v-event-timed-container {
+  margin-right: 0 !important;
+}
+
+.v-calendar-category .v-calendar-category__category {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
 
 .v-event-draggable {
   padding-left: 6px;
